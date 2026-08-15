@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum StartupStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  likes  Like[]
+  saves  SavedStartup[]
+  views  View[]
+  clicks WebsiteClick[]
+}
+
+model Startup {
+  id String @id @default(cuid())
+
+  name             String
+  slug             String @unique
+  shortDescription String
+  description      String
+
+  websiteUrl  String
+  linkedinUrl String?
+  xUrl        String?
+  githubUrl   String?
+  youtubeUrl  String?
+
+  logoUrl       String?
+  coverImageUrl String?
+
+  ycBatch       String
+  location      String?
+  foundedYear   Int?
+  employeeRange String?
+
+  status       StartupStatus @default(DRAFT)
+  featured     Boolean       @default(false)
+  displayOrder Int           @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  founders   Founder[]
+  images     StartupImage[]
+  categories StartupCategory[]
+  likes      Like[]
+  saves      SavedStartup[]
+  views      View[]
+  clicks     WebsiteClick[]
+
+  @@index([status, displayOrder])
+  @@index([ycBatch])
+  @@index([location])
+}
+
+model Founder {
+  id        String  @id @default(cuid())
+  startupId String
+  startup   Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  name        String
+  role        String
+  photoUrl    String?
+  linkedinUrl String?
+  xUrl        String?
+  websiteUrl  String?
+  bio         String?
+
+  displayOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startupId])
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  startups StartupCategory[]
+}
+
+// explicit join model for the Startup <-> Category many-to-many
+model StartupCategory {
+  startupId  String
+  categoryId String
+
+  startup  Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([startupId, categoryId])
+  @@index([categoryId])
+}
+
+model StartupImage {
+  id        String  @id @default(cuid())
+  startupId String
+  startup   Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  url          String
+  alt          String?
+  displayOrder Int     @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([startupId])
+}
+
+model Like {
+  id        String  @id @default(cuid())
+  userId    String
+  startupId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startup   Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, startupId])
+  @@index([startupId])
+}
+
+model SavedStartup {
+  id        String  @id @default(cuid())
+  userId    String
+  startupId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startup   Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, startupId])
+  @@index([startupId])
+}
+
+// anonymous browsing is allowed, so userId/sessionId are both optional -
+// exactly one should be set depending on whether the visitor is logged in
+model View {
+  id        String  @id @default(cuid())
+  startupId String
+  startup   Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  @@index([startupId])
+}
+
+model WebsiteClick {
+  id        String  @id @default(cuid())
+  startupId String
+  startup   Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([startupId])
+}
