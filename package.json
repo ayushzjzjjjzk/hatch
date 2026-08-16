@@ -1,0 +1,10 @@
+{
+  "name": "hatch-root",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix hatch-app run build",
+    "start": "npm --prefix hatch-app start",
+    "postinstall": "npm --prefix hatch-app install"
+  }
+}

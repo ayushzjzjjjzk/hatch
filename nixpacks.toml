@@ -1,0 +1,11 @@
+[providers]
+providers = ["node"]
+
+[phases.install]
+cmds = ["npm --prefix hatch-app install"]
+
+[phases.build]
+cmds = ["npm --prefix hatch-app run build"]
+
+[start]
+cmd = "npm --prefix hatch-app start"
