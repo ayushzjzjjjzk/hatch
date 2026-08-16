@@ -1,6 +1,7 @@
 [build]
   base = "hatch-app"
   command = "npm run build"
+  publish = "hatch-app/.next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
